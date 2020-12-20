@@ -5,6 +5,8 @@ use ddc_i2c::I2cDeviceDdc;
 
 use std::env::args;
 
+static BRIGHT_STEP: u16 = 1;
+
 fn main() {
     //println!("Hello, world!");
 
@@ -22,12 +24,12 @@ fn set_brightness(ddc: &mut I2cDeviceDdc, mut to_val: u16, mut current_val: u16)
     let brightness_increment: u16 = 1;
     if to_val > current_val {
         while to_val > current_val{
-            current_val += brightness_increment;
+            current_val += BRIGHT_STEP;
             ddc.set_vcp_feature(0x10, current_val).expect("Error emitted");
         }
     } else if to_val < current_val {
         while to_val < current_val{
-            current_val -= brightness_increment;
+            current_val -= BRIGHT_STEP;
             ddc.set_vcp_feature(0x10, current_val).expect("Error emitted");
         }
     } else {
