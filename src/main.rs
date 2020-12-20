@@ -1,8 +1,5 @@
 use ddc::Ddc;
-use std::io::Result;
-
 use ddc_i2c::I2cDeviceDdc;
-
 use std::env::args;
 
 static BRIGHT_STEP: u16 = 1;
