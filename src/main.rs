@@ -3,6 +3,7 @@ use ddc_i2c::I2cDeviceDdc;
 use std::env::args;
 
 static BRIGHT_STEP: u16 = 1;
+static VCP_BRIGHTNESS: u8 = 0x10;
 
 fn main() {
     let args = args().nth(1); // take the first arg to be desired brightness
@@ -25,12 +26,12 @@ fn set_brightness(ddc: &mut I2cDeviceDdc, to_val: u16, mut current_val: u16) {
     if to_val > current_val { // when increasing brightness
         while to_val > current_val{
             current_val += BRIGHT_STEP;
-            ddc.set_vcp_feature(0x10, current_val).expect("Error emitted");
+            ddc.set_vcp_feature(VCP_BRIGHTNESS, current_val).expect("Error emitted");
         }
     } else if to_val < current_val { // when decreasing brightness
         while to_val < current_val{
             current_val -= BRIGHT_STEP;
-            ddc.set_vcp_feature(0x10, current_val).expect("Error emitted");
+            ddc.set_vcp_feature(VCP_BRIGHTNESS, current_val).expect("Error emitted");
         }
     } else {
         println!("Nothing happend");
@@ -40,7 +41,7 @@ fn set_brightness(ddc: &mut I2cDeviceDdc, to_val: u16, mut current_val: u16) {
 // function to get u16 brightness
 fn get_brightness(ddc: &mut I2cDeviceDdc) -> u16 {
     // get current brightness info
-    let current_val = ddc.get_vcp_feature(0x10).expect("Failed");
+    let current_val = ddc.get_vcp_feature(VCP_BRIGHTNESS).expect("Failed");
     // return the value of the brightness
     current_val.value()
 }
