@@ -1,6 +1,7 @@
 use ddc::Ddc;
 use ddc_i2c::I2cDeviceDdc;
 use std::env::args;
+use chrono::prelude::{DateTime, Local, Datelike};
 
 static BRIGHT_STEP: u16 = 1;
 static VCP_BRIGHTNESS: u8 = 0x10;
@@ -13,6 +14,12 @@ fn main() {
 
     // get monitor device
     let ddc = &mut ddc_i2c::from_i2c_device("/dev/i2c-4").unwrap();
+
+    let local: DateTime<Local> = Local::now();
+    let local_unix = local.timestamp();
+    let month = local.month();
+    let year = local.year();
+    let day = local.day();
 
     let (sunrise, sunset) = sunrise::sunrise_sunset(53.5461, -113.323975, 2020, 12, 19); // this returns julian dates
 
