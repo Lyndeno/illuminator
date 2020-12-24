@@ -14,7 +14,7 @@ fn main() {
     // get monitor device
     let ddc = &mut ddc_i2c::from_i2c_device("/dev/i2c-4").unwrap();
 
-    let (sunrise, sunset) = sunrise::sunrise_sunset(53.5461, -113.323975, 2020, 12, 19); // thiis returns julian dates
+    let (sunrise, sunset) = sunrise::sunrise_sunset(53.5461, -113.323975, 2020, 12, 19); // this returns julian dates
 
     let current_brightness = get_brightness(ddc);
 
