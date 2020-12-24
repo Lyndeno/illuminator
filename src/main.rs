@@ -10,10 +10,10 @@ static BRIGHTNESS_DAY: u16 = 100;
 static BRIGHTNESS_NIGHT: u16 = 30;
 
 fn main() {
-    let args = args().nth(1); // take the first arg to be desired brightness
+    //let args = args().nth(1); // take the first arg to be desired brightness
 
     // parse the brightness to u16
-    let brightness: u16 = args.expect("argument: monitor brightness 0-100").parse::<u16>().ok().expect("This is not an integer!");
+    //let brightness: u16 = args.expect("argument: monitor brightness 0-100").parse::<u16>().ok().expect("This is not an integer!");
 
     // get monitor device
     let ddc = &mut ddc_i2c::from_i2c_device("/dev/i2c-4").unwrap();
