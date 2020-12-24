@@ -6,6 +6,9 @@ use chrono::prelude::{DateTime, Local, Datelike};
 static BRIGHT_STEP: u16 = 1;
 static VCP_BRIGHTNESS: u8 = 0x10;
 
+static BRIGHTNESS_DAY: u16 = 100;
+static BRIGHTNESS_NIGHT: u16 = 30;
+
 fn main() {
     let args = args().nth(1); // take the first arg to be desired brightness
 
@@ -17,19 +20,20 @@ fn main() {
 
     let local: DateTime<Local> = Local::now();
     let local_unix = local.timestamp();
-    let month = local.month();
-    let year = local.year();
-    let day = local.day();
 
-    let (sunrise, sunset) = sunrise::sunrise_sunset(53.5461, -113.323975, 2020, 12, 19); // this returns julian dates
+    // this returns suneset and sunrise as a unix timestamp
+    let (sunrise_unix, sunset_unix) = sunrise::sunrise_sunset(53.5461, -113.323975, local.year(), local.month(), local.day());
 
-    let current_brightness = get_brightness(ddc);
-
-    set_brightness(ddc, brightness, current_brightness);
+    if (local_unix < sunset_unix) & (local_unix >= sunrise_unix) {
+        set_brightness(ddc, BRIGHTNESS_DAY);
+    } else if (local_unix < sunrise_unix) | (local_unix >= sunset_unix) {
+        set_brightness(ddc, BRIGHTNESS_NIGHT);
+    }
 }
 
 // this function slowly changes the brightness
-fn set_brightness(ddc: &mut I2cDeviceDdc, to_val: u16, mut current_val: u16) {
+fn set_brightness(ddc: &mut I2cDeviceDdc, to_val: u16) {
+    let mut current_val: u16 = get_brightness(ddc);
     if to_val > current_val { // when increasing brightness
         while to_val > current_val{
             current_val += BRIGHT_STEP;
@@ -52,3 +56,5 @@ fn get_brightness(ddc: &mut I2cDeviceDdc) -> u16 {
     // return the value of the brightness
     current_val.value()
 }
+
+
