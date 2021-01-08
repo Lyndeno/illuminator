@@ -15,3 +15,4 @@ This program requires that you have loaded the ```i2c-dev``` kernel module loade
 - [ ] Implement custom transition periods for smooth adjustments
 - [ ] Maybe a GTK front-end?
 - [ ] Maybe automatic location detection?
+- [ ] Would like to run as daemon, with helper gui and cli programs to send commands to the daemon
