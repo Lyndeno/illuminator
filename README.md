@@ -10,6 +10,8 @@ This program requires that you have loaded the ```i2c-dev``` kernel module loade
 
 ## To-do
 
+- [x] Change brightness level
+- [x] Change brightness level smoothly
 - [ ] Automatic sunset and sunrise detection based on location
 - [ ] Take input arguments (latitude, longitude, day brightness, and night brightness)
 - [ ] Implement custom transition periods for smooth adjustments
