@@ -60,7 +60,7 @@ fn get_brightness(ddc: &mut I2cDeviceDdc) -> u16 {
     current_val.value()
 }
 
-fn get_step_delay(delta_brightness: u16, delta_seconds: i64) -> u64 {
+fn get_step_delay_ms(delta_brightness: u16, delta_seconds: i64) -> u64 {
     let step_delay_ms: u64 = (delta_seconds as u64 * 1000) / (delta_brightness as u64);
     step_delay_ms
 }
