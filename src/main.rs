@@ -1,7 +1,10 @@
 use ddc::Ddc;
 use ddc_i2c::I2cDeviceDdc;
-use std::env::args;
+//use std::env::args;
 use chrono::prelude::{DateTime, Local, Datelike};
+
+// Use for smooth brightness
+//use std::{thread, time};
 
 static BRIGHT_STEP: u16 = 1;
 static VCP_BRIGHTNESS: u8 = 0x10;
@@ -55,6 +58,11 @@ fn get_brightness(ddc: &mut I2cDeviceDdc) -> u16 {
     let current_val = ddc.get_vcp_feature(VCP_BRIGHTNESS).expect("Failed");
     // return the value of the brightness
     current_val.value()
+}
+
+fn get_step_delay(delta_brightness: u16, delta_seconds: i64) -> u64 {
+    let step_delay_ms: u64 = (delta_seconds as u64) / (delta_brightness as u64);
+    step_delay_ms
 }
 
 
