@@ -3,6 +3,10 @@ use ddc_i2c::I2cDeviceDdc;
 //use std::env::args;
 use chrono::prelude::{DateTime, Local, Datelike};
 
+#[macro_use]
+extern crate clap;
+use clap::App;
+
 // Use for smooth brightness
 use std::{thread, time};
 
@@ -16,6 +20,9 @@ static BRIGHTNESS_NIGHT: u16 = 30;
 
 fn main() {
     //let args = args().nth(1); // take the first arg to be desired brightness
+
+    let yam1 = load_yaml!("cli.yml");
+    let cli_args = App::from_yaml(yam1).get_matches();
 
     // parse the brightness to u16
     //let brightness: u16 = args.expect("argument: monitor brightness 0-100").parse::<u16>().ok().expect("This is not an integer!");
