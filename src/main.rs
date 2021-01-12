@@ -4,7 +4,7 @@ use ddc_i2c::I2cDeviceDdc;
 use chrono::prelude::{DateTime, Local, Datelike};
 
 // Use for smooth brightness
-//use std::{thread, time};
+use std::{thread, time};
 
 static BRIGHT_STEP: u16 = 1;
 static VCP_BRIGHTNESS: u8 = 0x10;
@@ -66,6 +66,7 @@ fn set_brightness(ddc: &mut I2cDeviceDdc, to_val: u16) {
 
     // use this value to store the next brightness value
     let mut next_val = current_val;
+    let step_delay = get_step_delay( ( (to_val as i32) - (current_val as i32)).abs() as u16, 10 );
     
     while current_val != to_val {
         // set the next brightness value depending on current state
@@ -81,6 +82,7 @@ fn set_brightness(ddc: &mut I2cDeviceDdc, to_val: u16) {
             },
             Err(_) => println!("Error writing to monitor device"), //if operation not complete then do nothing and re-loop
         };
+        thread::sleep(step_delay);
     }
 }
 
@@ -95,9 +97,9 @@ fn get_brightness(ddc: &mut I2cDeviceDdc) -> Result<u16, ddc_i2c::Error<std::io:
 
 // get amount of time to delay between adjustments of 1% in brightness to get desired transition time
 // return value is in milliseconds
-fn get_step_delay_ms(delta_brightness: u16, delta_seconds: i64) -> u64 {
-    let step_delay_ms: u64 = (delta_seconds as u64 * 1000) / (delta_brightness as u64);
-    step_delay_ms
+fn get_step_delay(delta_brightness: u16, delta_seconds: i64) -> time::Duration {
+    let step_delay_ms: u64 = (delta_seconds as u64 * 1000) / ( (delta_brightness / BRIGHT_STEP) as u64);
+    time::Duration::from_millis(step_delay_ms)
 }
 
 
