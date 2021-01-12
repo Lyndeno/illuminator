@@ -10,11 +10,7 @@ use clap::App;
 // Use for smooth brightness
 use std::{thread, time};
 
-//static BRIGHT_STEP: u16 = 1;
 static VCP_BRIGHTNESS: u8 = 0x10;
-
-//static BRIGHTNESS_DAY: u16 = 100;
-//static BRIGHTNESS_NIGHT: u16 = 50;
 
 // TODO: Split this file into separate files of similar functionality
 
@@ -29,9 +25,6 @@ fn main() {
     let bright_day = cli_args.value_of("brightness_day").unwrap_or("100").parse::<u16>().unwrap();
     let bright_night = cli_args.value_of("brightness_night").unwrap_or("50").parse::<u16>().unwrap();
     let bright_step = cli_args.value_of("brightness_step").unwrap_or("1").parse::<u16>().unwrap();
-
-    // parse the brightness to u16
-    //let brightness: u16 = args.expect("argument: monitor brightness 0-100").parse::<u16>().ok().expect("This is not an integer!");
 
     // get monitor device
     // TODO: Get device path from model number: eg. "LG QHD"
@@ -110,7 +103,7 @@ fn get_brightness(ddc: &mut I2cDeviceDdc) -> Result<u16, ddc_i2c::Error<std::io:
 }
 
 // get amount of time to delay between adjustments of 1% in brightness to get desired transition time
-// return value is in milliseconds
+// return value is the duration type
 fn get_step_delay(delta_brightness: u16, delta_seconds: i64, bright_step: u16) -> time::Duration {
     let step_delay_ms: u64 = (delta_seconds as u64 * 1000) / ( (delta_brightness / bright_step) as u64);
     time::Duration::from_millis(step_delay_ms)
