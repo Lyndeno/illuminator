@@ -32,17 +32,22 @@ fn main() {
         // this returns suneset and sunrise as a unix timestamp
         // TODO: Take into account sunrise/sunset of previous and next days IF NEEDED, might not be needed
         let (sunrise_unix, sunset_unix) = sunrise::sunrise_sunset(53.5461, -113.323975, local.year(), local.month(), local.day());
+        let current_brightness = get_brightness(ddc);
+        let current_brightness = match current_brightness {
+            Ok(value) => value,
+            Err(_) => continue,
+        };
 
         // check if time is between sunset and sunrise
         if (local_unix < sunset_unix) & (local_unix >= sunrise_unix) {
-            if get_brightness(ddc) != BRIGHTNESS_DAY {
+            if current_brightness != BRIGHTNESS_DAY {
                 set_brightness(ddc, BRIGHTNESS_DAY);
                 println!("Day");
             };
             
         // check if time is before sunrise or after sunset
         } else if (local_unix < sunrise_unix) | (local_unix >= sunset_unix) {
-            if get_brightness(ddc) != BRIGHTNESS_NIGHT {
+            if current_brightness != BRIGHTNESS_NIGHT {
                 set_brightness(ddc, BRIGHTNESS_NIGHT);
                 println!("Night");
             };            
@@ -53,7 +58,13 @@ fn main() {
 // this function slowly changes the brightness
 // TODO: implement delays from get_step_delay into this function
 fn set_brightness(ddc: &mut I2cDeviceDdc, to_val: u16) {
-    let mut current_val: u16 = get_brightness(ddc);
+    let current_val = get_brightness(ddc);
+    let mut current_val = match current_val {
+        Ok(value) => value,
+        Err(_) => return,
+    };
+
+
     if to_val > current_val { // when increasing brightness
         while to_val > current_val{
             current_val += BRIGHT_STEP;
@@ -78,11 +89,12 @@ fn set_brightness(ddc: &mut I2cDeviceDdc, to_val: u16) {
 }
 
 // function to get u16 brightness
-fn get_brightness(ddc: &mut I2cDeviceDdc) -> u16 {
+fn get_brightness(ddc: &mut I2cDeviceDdc) -> Result<u16, ddc_i2c::Error<std::io::Error>> {
     // get current brightness info
-    let current_val = ddc.get_vcp_feature(VCP_BRIGHTNESS).expect("Failed");
-    // return the value of the brightness
-    current_val.value()
+    match ddc.get_vcp_feature(VCP_BRIGHTNESS) {
+        Ok(brightness) => Ok(brightness.value()),
+        Err(error) => Err(error),
+    }
 }
 
 // get amount of time to delay between adjustments of 1% in brightness to get desired transition time
