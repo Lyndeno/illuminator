@@ -56,7 +56,6 @@ fn main() {
 }
 
 // this function slowly changes the brightness
-// TODO: implement delays from get_step_delay into this function
 fn set_brightness(ddc: &mut I2cDeviceDdc, to_val: u16) {
     let current_val = get_brightness(ddc);
     let mut current_val = match current_val {
@@ -70,7 +69,10 @@ fn set_brightness(ddc: &mut I2cDeviceDdc, to_val: u16) {
     
     while current_val != to_val {
         // set the next brightness value depending on current state
-        if current_val < to_val {
+        if (((to_val as i32) - (current_val as i32)).abs() as u16) < BRIGHT_STEP {
+            // reduce step size so we don't infinitely hover around target brightness
+            next_val = to_val;
+        } else if current_val < to_val {
             next_val = current_val + BRIGHT_STEP;
         } else if current_val > to_val {
             next_val = current_val - BRIGHT_STEP;

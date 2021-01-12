@@ -14,7 +14,7 @@ This program requires that you have loaded the ```i2c-dev``` kernel module loade
 - [x] Change brightness level smoothly
 - [ ] Automatic sunset and sunrise detection based on location
 - [ ] Take input arguments (latitude, longitude, day brightness, and night brightness)
-- [ ] Implement custom transition periods for smooth adjustments
+- [x] Implement custom transition periods for smooth adjustments
 - [ ] Maybe a GTK front-end?
 - [ ] Maybe automatic location detection?
 - [ ] Would like to run as daemon, with helper gui and cli programs to send commands to the daemon
