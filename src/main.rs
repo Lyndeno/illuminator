@@ -57,13 +57,19 @@ fn set_brightness(ddc: &mut I2cDeviceDdc, to_val: u16) {
     if to_val > current_val { // when increasing brightness
         while to_val > current_val{
             current_val += BRIGHT_STEP;
-            ddc.set_vcp_feature(VCP_BRIGHTNESS, current_val).expect("Error emitted");
+            match ddc.set_vcp_feature(VCP_BRIGHTNESS, current_val) {
+                Ok(_) => (),
+                Err(_) => println!("Error writing to monitor device"),
+            };
             println!("Transitioning ({}%)", current_val);
         }
     } else if to_val < current_val { // when decreasing brightness
         while to_val < current_val{
             current_val -= BRIGHT_STEP;
-            ddc.set_vcp_feature(VCP_BRIGHTNESS, current_val).expect("Error emitted");
+            match ddc.set_vcp_feature(VCP_BRIGHTNESS, current_val) {
+                Ok(_) => (),
+                Err(_) => println!("Error writing to monitor device"),
+            };
             println!("Transitioning ({}%)", current_val);
         }
     } else {
