@@ -25,19 +25,28 @@ fn main() {
     // TODO: Get device path from model number: eg. "LG QHD"
     let ddc = &mut ddc_i2c::from_i2c_device("/dev/i2c-4").unwrap();
 
-    let local: DateTime<Local> = Local::now();
-    let local_unix = local.timestamp();
+    loop {
+        let local: DateTime<Local> = Local::now();
+        let local_unix = local.timestamp();
 
-    // this returns suneset and sunrise as a unix timestamp
-    // TODO: Take into account sunrise/sunset of previous and next days IF NEEDED, might not be needed
-    let (sunrise_unix, sunset_unix) = sunrise::sunrise_sunset(53.5461, -113.323975, local.year(), local.month(), local.day());
+        // this returns suneset and sunrise as a unix timestamp
+        // TODO: Take into account sunrise/sunset of previous and next days IF NEEDED, might not be needed
+        let (sunrise_unix, sunset_unix) = sunrise::sunrise_sunset(53.5461, -113.323975, local.year(), local.month(), local.day());
 
-    // check if time is between sunset and sunrise
-    if (local_unix < sunset_unix) & (local_unix >= sunrise_unix) {
-        set_brightness(ddc, BRIGHTNESS_DAY);
-    // check if time is before sunrise or after sunset
-    } else if (local_unix < sunrise_unix) | (local_unix >= sunset_unix) {
-        set_brightness(ddc, BRIGHTNESS_NIGHT);
+        // check if time is between sunset and sunrise
+        if (local_unix < sunset_unix) & (local_unix >= sunrise_unix) {
+            if get_brightness(ddc) != BRIGHTNESS_DAY {
+                set_brightness(ddc, BRIGHTNESS_DAY);
+                println!("Day");
+            };
+            
+        // check if time is before sunrise or after sunset
+        } else if (local_unix < sunrise_unix) | (local_unix >= sunset_unix) {
+            if get_brightness(ddc) != BRIGHTNESS_NIGHT {
+                set_brightness(ddc, BRIGHTNESS_NIGHT);
+                println!("Night");
+            };            
+        }
     }
 }
 
@@ -49,14 +58,16 @@ fn set_brightness(ddc: &mut I2cDeviceDdc, to_val: u16) {
         while to_val > current_val{
             current_val += BRIGHT_STEP;
             ddc.set_vcp_feature(VCP_BRIGHTNESS, current_val).expect("Error emitted");
+            println!("Transitioning ({}%)", current_val);
         }
     } else if to_val < current_val { // when decreasing brightness
         while to_val < current_val{
             current_val -= BRIGHT_STEP;
             ddc.set_vcp_feature(VCP_BRIGHTNESS, current_val).expect("Error emitted");
+            println!("Transitioning ({}%)", current_val);
         }
     } else {
-        println!("Nothing happend");
+        //println!("Nothing happend");
     };
 }
 
