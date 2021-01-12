@@ -64,28 +64,24 @@ fn set_brightness(ddc: &mut I2cDeviceDdc, to_val: u16) {
         Err(_) => return,
     };
 
-
-    if to_val > current_val { // when increasing brightness
-        while to_val > current_val{
-            current_val += BRIGHT_STEP;
-            match ddc.set_vcp_feature(VCP_BRIGHTNESS, current_val) {
-                Ok(_) => (),
-                Err(_) => println!("Error writing to monitor device"),
-            };
-            println!("Transitioning ({}%)", current_val);
+    // use this value to store the next brightness value
+    let mut next_val = current_val;
+    
+    while current_val != to_val {
+        // set the next brightness value depending on current state
+        if current_val < to_val {
+            next_val = current_val + BRIGHT_STEP;
+        } else if current_val > to_val {
+            next_val = current_val - BRIGHT_STEP;
         }
-    } else if to_val < current_val { // when decreasing brightness
-        while to_val < current_val{
-            current_val -= BRIGHT_STEP;
-            match ddc.set_vcp_feature(VCP_BRIGHTNESS, current_val) {
-                Ok(_) => (),
-                Err(_) => println!("Error writing to monitor device"),
-            };
-            println!("Transitioning ({}%)", current_val);
-        }
-    } else {
-        //println!("Nothing happend");
-    };
+        match ddc.set_vcp_feature(VCP_BRIGHTNESS, next_val) {
+            Ok(_) => {
+                current_val = next_val; // if operation was valid then current brightness can be stored
+                println!("Transitioning ({}%)", current_val);
+            },
+            Err(_) => println!("Error writing to monitor device"), //if operation not complete then do nothing and re-loop
+        };
+    }
 }
 
 // function to get u16 brightness
