@@ -44,8 +44,8 @@ fn main() {
         // this returns suneset and sunrise as a unix timestamp
         // TODO: Take into account sunrise/sunset of previous and next days IF NEEDED, might not be needed
         let (sunrise_unix, sunset_unix) = sunrise::sunrise_sunset(53.5461, -113.323975, local.year(), local.month(), local.day());
-        let current_brightness = get_brightness(ddc);
-        let current_brightness = match current_brightness {
+        
+        let current_brightness = match get_brightness(ddc) {
             Ok(value) => value,
             Err(_) => continue,
         };
