@@ -48,63 +48,58 @@ fn main() {
             Err(_) => continue,
         };
 
-        // check if time is between sunset and sunrise
-        if (local_unix < sunset_unix) & (local_unix >= sunrise_unix) {
-            if current_brightness != bright_day {
-                set_brightness_smooth(ddc, bright_day, transition_dur, bright_step);
-                println!("Day");
-            };
-            
-        // check if time is before sunrise or after sunset
-        } else if (local_unix < sunrise_unix) | (local_unix >= sunset_unix) {
-            if current_brightness != bright_night {
-                set_brightness_smooth(ddc, bright_night, transition_dur, bright_step);
-                println!("Night");
-            };            
-        }
+        match get_time_period(local_unix, sunset_unix, sunrise_unix) {
+            Timeperiod::Day => {
+                //if current_brightness != bright_day {
+                    set_brightness(ddc, bright_day, transition_dur, bright_step, true);
+                    println!("Day");
+                //}
+            }, 
+            Timeperiod::Night => {
+                //if current_brightness != bright_night {
+                    set_brightness(ddc, bright_night, transition_dur, bright_step, true);
+                    println!("Night");
+                //}
+            },
+        };
     }
 }
 
 // this function slowly changes the brightness
-fn set_brightness_smooth(ddc: &mut I2cDeviceDdc, to_val: u16, duration_s: i64, bright_step: u16) {
+fn set_brightness(ddc: &mut I2cDeviceDdc, to_val: u16, duration_s: i64, bright_step: u16, smooth: bool) {
     let current_val = get_brightness(ddc);
+    
     let mut current_val = match current_val {
         Ok(value) => value,
         Err(_) => return,
     };
-
-    // use this value to store the next brightness value
-    let mut next_val = current_val;
-    let step_delay = get_step_delay( ( (to_val as i32) - (current_val as i32)).abs() as u16, duration_s, bright_step );
-    
-    while current_val != to_val {
-        // set the next brightness value depending on current state
-        if (((to_val as i32) - (current_val as i32)).abs() as u16) < bright_step {
-            // reduce step size so we don't infinitely hover around target brightness
-            next_val = to_val;
-        } else if current_val < to_val {
-            next_val = current_val + bright_step;
-        } else if current_val > to_val {
-            next_val = current_val - bright_step;
+    if current_val != to_val {
+        // use this value to store the next brightness value
+        let mut next_val = current_val;
+        let step_delay = get_step_delay( ( (to_val as i32) - (current_val as i32)).abs() as u16, duration_s, bright_step );
+        
+        while current_val != to_val {
+            if smooth {
+                thread::sleep(step_delay);
+                // set the next brightness value depending on current state
+                if (((to_val as i32) - (current_val as i32)).abs() as u16) < bright_step {
+                    // reduce step size so we don't infinitely hover around target brightness
+                    next_val = to_val;
+                } else if current_val < to_val {
+                    next_val = current_val + bright_step;
+                } else if current_val > to_val {
+                    next_val = current_val - bright_step;
+                }
+            }
+            match ddc.set_vcp_feature(VCP_BRIGHTNESS, next_val) {
+                Ok(_) => {
+                    current_val = next_val; // if operation was valid then current brightness can be stored
+                    println!("Transitioning ({}%)", current_val);
+                },
+                Err(_) => println!("Error writing to monitor device"), //if operation not complete then do nothing and re-loop
+            };
         }
-        match ddc.set_vcp_feature(VCP_BRIGHTNESS, next_val) {
-            Ok(_) => {
-                current_val = next_val; // if operation was valid then current brightness can be stored
-                println!("Transitioning ({}%)", current_val);
-            },
-            Err(_) => println!("Error writing to monitor device"), //if operation not complete then do nothing and re-loop
-        };
-        thread::sleep(step_delay);
     }
-}
-
-fn set_brightness (ddc: &mut I2cDeviceDdc, to_val: u16) {
-    match ddc.set_vcp_feature(VCP_BRIGHTNESS, to_val) {
-        Ok(_) => {
-            println!("Set brightness to ({}%)", to_val);
-        },
-        Err(_) => println!("Error writing to monitor device"),
-    };
 }
 
 // function to get u16 brightness
