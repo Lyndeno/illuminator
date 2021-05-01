@@ -12,6 +12,11 @@ use std::{thread, time};
 
 static VCP_BRIGHTNESS: u8 = 0x10;
 
+enum Timeperiod {
+    Day,
+    Night,
+}
+
 // TODO: Split this file into separate files of similar functionality
 
 fn main() {
@@ -116,6 +121,17 @@ fn get_brightness(ddc: &mut I2cDeviceDdc) -> Result<u16, ddc_i2c::Error<std::io:
 fn get_step_delay(delta_brightness: u16, delta_seconds: i64, bright_step: u16) -> time::Duration {
     let step_delay_ms: u64 = (delta_seconds as u64 * 1000) / ( (delta_brightness / bright_step) as u64);
     time::Duration::from_millis(step_delay_ms)
+}
+
+fn get_time_period(current: i64, sunset: i64, sunrise: i64) -> Timeperiod {
+    let mut current_period = Timeperiod::Day;
+    if (current < sunset) & (current >= sunrise) {
+        current_period = Timeperiod::Day;        
+    // check if time is before sunrise or after sunset
+    } else if (current < sunrise) | (current >= sunset) {
+        current_period = Timeperiod::Night;           
+    }
+    current_period
 }
 
 
