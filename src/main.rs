@@ -46,14 +46,14 @@ fn main() {
         // check if time is between sunset and sunrise
         if (local_unix < sunset_unix) & (local_unix >= sunrise_unix) {
             if current_brightness != bright_day {
-                set_brightness(ddc, bright_day, transition_dur, bright_step);
+                set_brightness_smooth(ddc, bright_day, transition_dur, bright_step);
                 println!("Day");
             };
             
         // check if time is before sunrise or after sunset
         } else if (local_unix < sunrise_unix) | (local_unix >= sunset_unix) {
             if current_brightness != bright_night {
-                set_brightness(ddc, bright_night, transition_dur, bright_step);
+                set_brightness_smooth(ddc, bright_night, transition_dur, bright_step);
                 println!("Night");
             };            
         }
@@ -61,7 +61,7 @@ fn main() {
 }
 
 // this function slowly changes the brightness
-fn set_brightness(ddc: &mut I2cDeviceDdc, to_val: u16, duration_s: i64, bright_step: u16) {
+fn set_brightness_smooth(ddc: &mut I2cDeviceDdc, to_val: u16, duration_s: i64, bright_step: u16) {
     let current_val = get_brightness(ddc);
     let mut current_val = match current_val {
         Ok(value) => value,
@@ -91,6 +91,15 @@ fn set_brightness(ddc: &mut I2cDeviceDdc, to_val: u16, duration_s: i64, bright_s
         };
         thread::sleep(step_delay);
     }
+}
+
+fn set_brightness (ddc: &mut I2cDeviceDdc, to_val: u16) {
+    match ddc.set_vcp_feature(VCP_BRIGHTNESS, to_val) {
+        Ok(_) => {
+            println!("Set brightness to ({}%)", to_val);
+        },
+        Err(_) => println!("Error writing to monitor device"),
+    };
 }
 
 // function to get u16 brightness
