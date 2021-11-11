@@ -7,6 +7,9 @@ use crate::i2c::I2cBacklight;
 mod intel;
 use crate::intel::IntelBacklight;
 
+mod backend;
+use crate::backend::Backend;
+
 // Use for smooth brightness
 use std::time;
 
@@ -53,19 +56,17 @@ struct Opt {
 fn main() {
     let opt = Opt::from_args();
 
-    let mut intels: Vec<IntelBacklight> = Vec::new();
+    let mut backlights: Vec<Backend> = Vec::new();
 
     if opt.intel {
-        intels.push(IntelBacklight::new());
+        backlights.push(Backend::Intel(IntelBacklight::new()));
     }
 
     // get monitor device
     // TODO: Get device path from model number: eg. "LG QHD"
-    let mut backlights: Vec<I2cBacklight> = Vec::new();
-    //let mut backlight = I2cBacklight::new(opt.display).unwrap();
     let i2c_count = opt.i2c.len();
     for i in 0..i2c_count {
-        backlights.push(I2cBacklight::new(opt.i2c[i].clone()).unwrap());
+        backlights.push(Backend::I2c(I2cBacklight::new(opt.i2c[i].clone()).unwrap()));
     }
 
     loop {
@@ -85,30 +86,16 @@ fn main() {
         match get_time_period(local_unix, sunset_unix, sunrise_unix) {
             Timeperiod::Day => {
                 //if current_brightness != bright_day {
-                    if i2c_count != 0 {
-                        for i in 0..i2c_count {
-                            backlights[i].set_brightness(opt.brightness_day);
-                        }
-                    }
-                    if opt.intel {
-                        for i in 0..intels.len() {
-                            intels[i].set_brightness(opt.brightness_day);
-                        }
+                    for i in 0..backlights.len() {
+                        backlights[i].set_brightness(opt.brightness_day);
                     }
                     if opt.verbose > 0 { println!("Day") };
                 //}
             }, 
             Timeperiod::Night => {
                 //if current_brightness != bright_night {
-                    if i2c_count != 0 {
-                        for i in 0..i2c_count {
-                            backlights[i].set_brightness(opt.brightness_night);
-                        }
-                    }
-                    if opt.intel {
-                        for i in 0..intels.len() {
-                            intels[i].set_brightness(opt.brightness_night);
-                        }
+                    for i in 0..backlights.len() {
+                        backlights[i].set_brightness(opt.brightness_night);
                     }
                     if opt.verbose > 0 { println!("Night") };
                 //}
