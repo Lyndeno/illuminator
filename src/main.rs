@@ -17,6 +17,9 @@ enum Timeperiod {
 #[derive(StructOpt, Debug)]
 #[structopt(name = "illuminator")]
 struct Opt {
+    /// Verboseness (-v, -vv, -vvv, etc.)
+    #[structopt(short, long, parse(from_occurrences))]
+    verbose: u8,
 
     /// Day brightness as a percentage
     #[structopt(long, default_value = "100")]
@@ -48,7 +51,8 @@ fn main() {
     // TODO: Get device path from model number: eg. "LG QHD"
     let mut backlights: Vec<I2cBacklight> = Vec::new();
     //let mut backlight = I2cBacklight::new(opt.display).unwrap();
-    for i in 0..opt.i2c.len() {
+    let i2c_count = opt.i2c.len();
+    for i in 0..i2c_count {
         backlights.push(I2cBacklight::new(opt.i2c[i].clone()).unwrap());
     }
 
@@ -69,18 +73,22 @@ fn main() {
         match get_time_period(local_unix, sunset_unix, sunrise_unix) {
             Timeperiod::Day => {
                 //if current_brightness != bright_day {
-                    for i in 0..opt.i2c.len() {
-                        backlights[i].set_brightness(opt.brightness_day);
+                    if i2c_count != 0 {
+                        for i in 0..i2c_count {
+                            backlights[i].set_brightness(opt.brightness_day);
+                        }
                     }
-                    println!("Day");
+                    if opt.verbose > 0 { println!("Day") };
                 //}
             }, 
             Timeperiod::Night => {
                 //if current_brightness != bright_night {
-                    for i in 0..opt.i2c.len() {
-                        backlights[i].set_brightness(opt.brightness_night);
+                    if i2c_count != 0 {
+                        for i in 0..i2c_count {
+                            backlights[i].set_brightness(opt.brightness_night);
+                        }
                     }
-                    println!("Night");
+                    if opt.verbose > 0 { println!("Night") };
                 //}
             },
         };
