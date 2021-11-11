@@ -1,39 +1,52 @@
 //use std::env::args;
 use chrono::prelude::{DateTime, Local, Datelike};
 
-#[macro_use]
-extern crate clap;
-use clap::App;
-
 mod i2c;
 use crate::i2c::I2cBacklight;
 
 // Use for smooth brightness
-use std::{thread, time};
+use std::time;
 
+use structopt::StructOpt;
 
 enum Timeperiod {
     Day,
     Night,
 }
 
+#[derive(StructOpt, Debug)]
+#[structopt(name = "illuminator")]
+struct Opt {
+
+    /// Day brightness as a percentage
+    #[structopt(long, default_value = "100")]
+    brightness_day: u16,
+
+    /// Night brightness as a percentage
+    #[structopt(long, default_value = "50")]
+    brightness_night: u16,
+
+    /// Step size of brightness as a percentage
+    #[structopt(long, default_value = "1")]
+    brightness_step: u16,
+
+    /// Transition duration between night and day
+    #[structopt(long, default_value = "0")]
+    transition_dur: u16,
+
+    /// Path to i2c display
+    #[structopt(long)]
+    display: String,
+}
+
 // TODO: Split this file into separate files of similar functionality
 
 fn main() {
-    //let args = args().nth(1); // take the first arg to be desired brightness
-
-    let yam1 = load_yaml!("cli.yml");
-    let cli_args = App::from_yaml(yam1).get_matches();
-
-    let display_path = cli_args.value_of("display_path").unwrap();
-    let transition_dur: i64 = cli_args.value_of("transition_dur_s").unwrap_or("0").parse::<i64>().unwrap();
-    let bright_day = cli_args.value_of("brightness_day").unwrap_or("100").parse::<u16>().unwrap();
-    let bright_night = cli_args.value_of("brightness_night").unwrap_or("50").parse::<u16>().unwrap();
-    let bright_step = cli_args.value_of("brightness_step").unwrap_or("1").parse::<u16>().unwrap();
+    let opt = Opt::from_args();
 
     // get monitor device
     // TODO: Get device path from model number: eg. "LG QHD"
-    let mut backlight = I2cBacklight::new(display_path.to_string()).unwrap();
+    let mut backlight = I2cBacklight::new(opt.display).unwrap();
 
     loop {
         let local: DateTime<Local> = Local::now();
@@ -51,13 +64,13 @@ fn main() {
         match get_time_period(local_unix, sunset_unix, sunrise_unix) {
             Timeperiod::Day => {
                 //if current_brightness != bright_day {
-                    backlight.set_brightness(bright_day);
+                    backlight.set_brightness(opt.brightness_day);
                     println!("Day");
                 //}
             }, 
             Timeperiod::Night => {
                 //if current_brightness != bright_night {
-                    backlight.set_brightness(bright_night);
+                    backlight.set_brightness(opt.brightness_night);
                     println!("Night");
                 //}
             },
