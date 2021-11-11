@@ -1,5 +1,5 @@
 [package]
-name = "autoddc"
+name = "illuminator"
 version = "0.1.0"
 authors = ["Lyndon Sanche <lsanche@lyndeno.ca>"]
 edition = "2018"

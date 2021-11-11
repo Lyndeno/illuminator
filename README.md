@@ -1,4 +1,4 @@
-# autoddc (better name pending)
+# illuminator
 
 The purpose of this project is to allow proper time-based automatic brightness adjustments on desktops (or laptops) with external monitors.
 
