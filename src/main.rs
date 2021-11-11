@@ -1,5 +1,3 @@
-use ddc::Ddc;
-use ddc_i2c::I2cDeviceDdc;
 //use std::env::args;
 use chrono::prelude::{DateTime, Local, Datelike};
 
@@ -7,10 +5,12 @@ use chrono::prelude::{DateTime, Local, Datelike};
 extern crate clap;
 use clap::App;
 
+mod i2c;
+use crate::i2c::I2cBacklight;
+
 // Use for smooth brightness
 use std::{thread, time};
 
-static VCP_BRIGHTNESS: u8 = 0x10;
 
 enum Timeperiod {
     Day,
@@ -33,7 +33,7 @@ fn main() {
 
     // get monitor device
     // TODO: Get device path from model number: eg. "LG QHD"
-    let ddc = &mut ddc_i2c::from_i2c_device(display_path.to_string()).unwrap();
+    let mut backlight = I2cBacklight::new(display_path.to_string()).unwrap();
 
     loop {
         let local: DateTime<Local> = Local::now();
@@ -43,7 +43,7 @@ fn main() {
         // TODO: Take into account sunrise/sunset of previous and next days IF NEEDED, might not be needed
         let (sunrise_unix, sunset_unix) = sunrise::sunrise_sunset(53.5461, -113.323975, local.year(), local.month(), local.day());
         
-        let current_brightness = match get_brightness(ddc) {
+        let current_brightness = match backlight.get_brightness() {
             Ok(value) => value,
             Err(_) => continue,
         };
@@ -51,13 +51,13 @@ fn main() {
         match get_time_period(local_unix, sunset_unix, sunrise_unix) {
             Timeperiod::Day => {
                 //if current_brightness != bright_day {
-                    set_brightness(ddc, bright_day, transition_dur, bright_step, true);
+                    backlight.set_brightness(bright_day);
                     println!("Day");
                 //}
             }, 
             Timeperiod::Night => {
                 //if current_brightness != bright_night {
-                    set_brightness(ddc, bright_night, transition_dur, bright_step, true);
+                    backlight.set_brightness(bright_night);
                     println!("Night");
                 //}
             },
@@ -65,6 +65,7 @@ fn main() {
     }
 }
 
+/*
 // this function slowly changes the brightness
 fn set_brightness(ddc: &mut I2cDeviceDdc, to_val: u16, duration_s: i64, bright_step: u16, smooth: bool) {
     let current_val = get_brightness(ddc);
@@ -110,6 +111,7 @@ fn get_brightness(ddc: &mut I2cDeviceDdc) -> Result<u16, ddc_i2c::Error<std::io:
         Err(error) => Err(error),
     }
 }
+*/
 
 // get amount of time to delay between adjustments of 1% in brightness to get desired transition time
 // return value is the duration type
