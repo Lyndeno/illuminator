@@ -36,7 +36,7 @@ struct Opt {
 
     /// Path to i2c display
     #[structopt(long)]
-    display: String,
+    i2c: Vec<String>,
 }
 
 // TODO: Split this file into separate files of similar functionality
@@ -46,7 +46,11 @@ fn main() {
 
     // get monitor device
     // TODO: Get device path from model number: eg. "LG QHD"
-    let mut backlight = I2cBacklight::new(opt.display).unwrap();
+    let mut backlights: Vec<I2cBacklight> = Vec::new();
+    //let mut backlight = I2cBacklight::new(opt.display).unwrap();
+    for i in 0..opt.i2c.len() {
+        backlights.push(I2cBacklight::new(opt.i2c[i].clone()).unwrap());
+    }
 
     loop {
         let local: DateTime<Local> = Local::now();
@@ -56,21 +60,26 @@ fn main() {
         // TODO: Take into account sunrise/sunset of previous and next days IF NEEDED, might not be needed
         let (sunrise_unix, sunset_unix) = sunrise::sunrise_sunset(53.5461, -113.323975, local.year(), local.month(), local.day());
         
+        /*
         let current_brightness = match backlight.get_brightness() {
             Ok(value) => value,
             Err(_) => continue,
-        };
+        };*/
 
         match get_time_period(local_unix, sunset_unix, sunrise_unix) {
             Timeperiod::Day => {
                 //if current_brightness != bright_day {
-                    backlight.set_brightness(opt.brightness_day);
+                    for i in 0..opt.i2c.len() {
+                        backlights[i].set_brightness(opt.brightness_day);
+                    }
                     println!("Day");
                 //}
             }, 
             Timeperiod::Night => {
                 //if current_brightness != bright_night {
-                    backlight.set_brightness(opt.brightness_night);
+                    for i in 0..opt.i2c.len() {
+                        backlights[i].set_brightness(opt.brightness_night);
+                    }
                     println!("Night");
                 //}
             },
