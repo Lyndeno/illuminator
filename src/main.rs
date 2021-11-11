@@ -4,6 +4,9 @@ use chrono::prelude::{DateTime, Local, Datelike};
 mod i2c;
 use crate::i2c::I2cBacklight;
 
+mod intel;
+use crate::intel::IntelBacklight;
+
 // Use for smooth brightness
 use std::time;
 
@@ -40,12 +43,21 @@ struct Opt {
     /// Path to i2c display
     #[structopt(long)]
     i2c: Vec<String>,
+
+    #[structopt(long)]
+    intel: bool,
 }
 
 // TODO: Split this file into separate files of similar functionality
 
 fn main() {
     let opt = Opt::from_args();
+
+    let mut intels: Vec<IntelBacklight> = Vec::new();
+
+    if opt.intel {
+        intels.push(IntelBacklight::new());
+    }
 
     // get monitor device
     // TODO: Get device path from model number: eg. "LG QHD"
@@ -78,6 +90,11 @@ fn main() {
                             backlights[i].set_brightness(opt.brightness_day);
                         }
                     }
+                    if opt.intel {
+                        for i in 0..intels.len() {
+                            intels[i].set_brightness(opt.brightness_day);
+                        }
+                    }
                     if opt.verbose > 0 { println!("Day") };
                 //}
             }, 
@@ -86,6 +103,11 @@ fn main() {
                     if i2c_count != 0 {
                         for i in 0..i2c_count {
                             backlights[i].set_brightness(opt.brightness_night);
+                        }
+                    }
+                    if opt.intel {
+                        for i in 0..intels.len() {
+                            intels[i].set_brightness(opt.brightness_night);
                         }
                     }
                     if opt.verbose > 0 { println!("Night") };
