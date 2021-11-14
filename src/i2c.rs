@@ -1,6 +1,8 @@
 use ddc::Ddc;
 use ddc_i2c::I2cDeviceDdc;
 
+use crate::brightness::Brightness;
+
 static VCP_BRIGHTNESS: u8 = 0x10;
 
 pub struct I2cBacklight {
@@ -17,14 +19,19 @@ impl I2cBacklight {
         }
     }
 
-    pub fn set_brightness(&mut self, to: u16) {
+    
+}
+
+impl Brightness for I2cBacklight {
+
+    fn set_brightness(&mut self, to: u16) {
         self.device.set_vcp_feature(VCP_BRIGHTNESS, to);
     }
 
-    pub fn get_brightness(&mut self) -> Result<u16, ddc_i2c::Error<std::io::Error>> {
+    fn get_brightness(&mut self) -> Option<u16> {
         match self.device.get_vcp_feature(VCP_BRIGHTNESS) {
-            Ok(brightness) => Ok(brightness.value()),
-            Err(e) => Err(e),
+            Ok(brightness) => Some(brightness.value()),
+            Err(_) => None,
         }
     }
 }

@@ -7,8 +7,8 @@ use crate::i2c::I2cBacklight;
 mod intel;
 use crate::intel::IntelBacklight;
 
-mod backend;
-use crate::backend::Backend;
+mod brightness;
+use crate::brightness::Brightness;
 
 // Use for smooth brightness
 use std::time;
@@ -56,17 +56,17 @@ struct Opt {
 fn main() {
     let opt = Opt::from_args();
 
-    let mut backlights: Vec<Backend> = Vec::new();
+    let mut backlights: Vec<Box<dyn Brightness>> = Vec::new();
 
     if opt.intel {
-        backlights.push(Backend::Intel(IntelBacklight::new()));
+        backlights.push(Box::new(IntelBacklight::new()));
     }
 
     // get monitor device
     // TODO: Get device path from model number: eg. "LG QHD"
     let i2c_count = opt.i2c.len();
     for i in 0..i2c_count {
-        backlights.push(Backend::I2c(I2cBacklight::new(opt.i2c[i].clone()).unwrap()));
+        backlights.push(Box::new(I2cBacklight::new(opt.i2c[i].clone()).unwrap()));
     }
 
     loop {
