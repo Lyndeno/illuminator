@@ -1,6 +1,3 @@
-//use std::env::args;
-use chrono::prelude::{DateTime, Local, Datelike};
-
 mod i2c;
 use crate::i2c::I2cBacklight;
 
@@ -10,15 +7,13 @@ use crate::intel::IntelBacklight;
 mod brightness;
 use crate::brightness::Brightness;
 
+mod location;
+use crate::location::{Location, Timeperiod};
+
 // Use for smooth brightness
 use std::time;
 
 use structopt::StructOpt;
-
-enum Timeperiod {
-    Day,
-    Night,
-}
 
 #[derive(StructOpt, Debug)]
 #[structopt(name = "illuminator")]
@@ -70,12 +65,10 @@ fn main() {
     }
 
     loop {
-        let local: DateTime<Local> = Local::now();
-        let local_unix = local.timestamp();
-
-        // this returns suneset and sunrise as a unix timestamp
-        // TODO: Take into account sunrise/sunset of previous and next days IF NEEDED, might not be needed
-        let (sunrise_unix, sunset_unix) = sunrise::sunrise_sunset(53.5461, -113.323975, local.year(), local.month(), local.day());
+        let local = Location {
+            latitude: 53.5461,
+            longitude: -113.323975
+        };
         
         /*
         let current_brightness = match backlight.get_brightness() {
@@ -83,7 +76,7 @@ fn main() {
             Err(_) => continue,
         };*/
 
-        match get_time_period(local_unix, sunset_unix, sunrise_unix) {
+        match local.get_time_period() {
             Timeperiod::Day => {
                 //if current_brightness != bright_day {
                     for i in 0..backlights.len() {
@@ -158,16 +151,3 @@ fn get_step_delay(delta_brightness: u16, delta_seconds: i64, bright_step: u16) -
     let step_delay_ms: u64 = (delta_seconds as u64 * 1000) / ( (delta_brightness / bright_step) as u64);
     time::Duration::from_millis(step_delay_ms)
 }
-
-fn get_time_period(current: i64, sunset: i64, sunrise: i64) -> Timeperiod {
-    let mut current_period = Timeperiod::Day;
-    if (current < sunset) & (current >= sunrise) {
-        current_period = Timeperiod::Day;        
-    // check if time is before sunrise or after sunset
-    } else if (current < sunrise) | (current >= sunset) {
-        current_period = Timeperiod::Night;           
-    }
-    current_period
-}
-
-
