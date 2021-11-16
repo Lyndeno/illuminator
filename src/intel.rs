@@ -16,10 +16,10 @@ impl IntelBacklight {
 }
 
 impl Brightness for IntelBacklight {
-    fn set_brightness(&mut self, to: u16) -> Result< (), () > {
+    fn set_brightness(&mut self, to: u16) -> Result< (), std::io::Error > {
         match self.device.set_percent(to as i32) {
             Ok(_) => Ok(()),
-            Err(_) => Err(()),
+            Err(e) => Err(e),
         }
     }
 

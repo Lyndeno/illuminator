@@ -12,6 +12,7 @@ use crate::location::{Location, Timeperiod};
 
 // Use for smooth brightness
 use std::time;
+use std::io::ErrorKind;
 
 use structopt::StructOpt;
 
@@ -62,7 +63,12 @@ fn main() {
     // Add i2c backlights to vector
     let i2c_count = opt.i2c.len();
     for i in 0..i2c_count {
-        backlights.push(Box::new(I2cBacklight::new(opt.i2c[i].clone()).unwrap()));
+        match I2cBacklight::new(opt.i2c[i].clone()) {
+            Ok(bl) => backlights.push(Box::new(bl)),
+            Err(ref e) if e.kind() == ErrorKind::NotFound => println!("Backlight {} not found", opt.i2c[i]),
+            Err(_) => println!("Something went wrong setting up backlight {}", opt.i2c[i]),
+        }
+        
     }
 
     loop {

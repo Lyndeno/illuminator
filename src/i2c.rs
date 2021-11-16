@@ -1,5 +1,6 @@
 use ddc::Ddc;
 use ddc_i2c::I2cDeviceDdc;
+use std::io::{Error, ErrorKind};
 
 use crate::brightness::Brightness;
 
@@ -24,10 +25,10 @@ impl I2cBacklight {
 
 impl Brightness for I2cBacklight {
 
-    fn set_brightness(&mut self, to: u16) -> Result<(), ()> {
+    fn set_brightness(&mut self, to: u16) -> Result<(), Error > {
         match self.device.set_vcp_feature(VCP_BRIGHTNESS, to) {
             Ok(_) => Ok(()),
-            Err(_) => Err(()),
+            Err(e) => Err(Error::new(ErrorKind::Other, e)),
         }
     }
 
