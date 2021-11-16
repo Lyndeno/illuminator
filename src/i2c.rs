@@ -24,8 +24,11 @@ impl I2cBacklight {
 
 impl Brightness for I2cBacklight {
 
-    fn set_brightness(&mut self, to: u16) {
-        self.device.set_vcp_feature(VCP_BRIGHTNESS, to);
+    fn set_brightness(&mut self, to: u16) -> Result<(), ()> {
+        match self.device.set_vcp_feature(VCP_BRIGHTNESS, to) {
+            Ok(_) => Ok(()),
+            Err(_) => Err(()),
+        }
     }
 
     fn get_brightness(&mut self) -> Option<u16> {

@@ -72,10 +72,13 @@ fn main() {
         };
         
         for bl in &mut backlights {
-            bl.set_brightness(match local.get_time_period() {
+            match bl.set_brightness(match local.get_time_period() {
                 Timeperiod::Day => opt.brightness_day,
                 Timeperiod::Night => opt.brightness_night,
-            });
+            }) {
+                Ok(_) => (),
+                Err(_) => println!("Oof"),
+            };
         }
     }
 }
