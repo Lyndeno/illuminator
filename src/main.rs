@@ -51,14 +51,15 @@ struct Opt {
 fn main() {
     let opt = Opt::from_args();
 
+    // Initialize backlight vector
     let mut backlights: Vec<Box<dyn Brightness>> = Vec::new();
 
+    // Add intel backlights to vector
     if opt.intel {
         backlights.push(Box::new(IntelBacklight::new()));
     }
 
-    // get monitor device
-    // TODO: Get device path from model number: eg. "LG QHD"
+    // Add i2c backlights to vector
     let i2c_count = opt.i2c.len();
     for i in 0..i2c_count {
         backlights.push(Box::new(I2cBacklight::new(opt.i2c[i].clone()).unwrap()));
@@ -70,30 +71,12 @@ fn main() {
             longitude: -113.323975
         };
         
-        /*
-        let current_brightness = match backlight.get_brightness() {
-            Ok(value) => value,
-            Err(_) => continue,
-        };*/
-
-        match local.get_time_period() {
-            Timeperiod::Day => {
-                //if current_brightness != bright_day {
-                    for i in 0..backlights.len() {
-                        backlights[i].set_brightness(opt.brightness_day);
-                    }
-                    if opt.verbose > 0 { println!("Day") };
-                //}
-            }, 
-            Timeperiod::Night => {
-                //if current_brightness != bright_night {
-                    for i in 0..backlights.len() {
-                        backlights[i].set_brightness(opt.brightness_night);
-                    }
-                    if opt.verbose > 0 { println!("Night") };
-                //}
-            },
-        };
+        for bl in &mut backlights {
+            bl.set_brightness(match local.get_time_period() {
+                Timeperiod::Day => opt.brightness_day,
+                Timeperiod::Night => opt.brightness_night,
+            });
+        }
     }
 }
 
